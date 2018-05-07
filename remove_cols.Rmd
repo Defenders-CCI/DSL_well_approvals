@@ -1,0 +1,23 @@
+---
+title: "Trim columns"
+author: "Defenders of Wildlife"
+date: "4/4/2018"
+output: html_document
+editor_options:
+  chunk_output_type: console
+---
+
+The oil and gas well data from New Mexico and Texas are far more expansive than needed for our analysis. Furthermore, the Texas data are made available by a commercial operation. For these two reasons, we strip unnecessary columns from both raw datasets. The full data are available from Defenders of Wildlife for scientific analysis, but we will not be posting the full data in persistent repositories. We include this script as a record of the columns that were removed for the analysis.
+
+```{r}
+nm <- rio::import("data/DSL_NM_habitat.csv")
+names(nm)
+nm <- dplyr::select(nm, -c(1:12,19:22))
+rio::export(nm, "data/DSL_NM_habitat_open.csv")
+
+tx <- rio::import("data/DSL_TX_habitat.csv")
+names(tx)
+tx <- dplyr::select(tx, -c(1:11,14:26,31:43))
+rio::export(tx, "data/DSL_TX_habitat_open.csv")
+
+```

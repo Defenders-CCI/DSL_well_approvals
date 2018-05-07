@@ -1,0 +1,151 @@
+---
+title: "NM and TX oil wells in DSL agreement areas"
+author: "Defenders of Wildlife"
+date: "4/4/2018"
+output: html_document
+editor_options:
+  chunk_output_type: console
+---
+
+# Abstract
+
+In 2018 Defenders of Wildlife and the Center for Biological Diversity petitioned the US Fish and Wildlife Service to list the dunes sagebrush lizard (_Sceloporus arenicolus_) as a threatened or endangered species. The petition included new analyses of the effectiveness of voluntary conservation agreements for the lizard in New Mexico and Texas. This document contains those analyses. We show that the Candidate Conservation Agreement (CCA) and CCA with Assurances (CCAA) in New Mexico, which contain strong avoidance mechanisms, are associated with a steep decline in oil and gas well development in the lizard's range. In contrast, the Texas Conservation Plan (TCP), which does not include avoidance, is not associated with any decline in the rate of oil and gas development in the lizard's range.
+
+```{r setup, include=FALSE}
+library(ggthemes)
+library(lubridate)
+library(rio)
+library(scales)
+library(tidyverse)
+library(viridis)
+
+nm <- rio::import("data/DSL_NM_habitat_open.csv")
+names(nm)
+
+tx <- rio::import("data/DSL_TX_habitat_open.csv")
+names(tx)
+```
+
+```{r functions, echo = FALSE}
+make_df <- function(ins, out, min = 1990, max = 2018) {
+  intab <- table(ins$APR_YR) %>% as.data.frame() %>%
+    mutate(year = as.numeric(as.character(Var1)),
+           inside = "Yes") %>%
+    filter(year > min) %>%
+    filter(year < max) %>%
+    select(-c(Var1))
+  outab <- table(out$APR_YR) %>% as.data.frame() %>%
+    mutate(year = as.numeric(as.character(Var1)),
+           inside = "No") %>%
+    filter(year > min) %>%
+    filter(year < max) %>%
+    select(-c(Var1))
+  well_cnt <- bind_rows(intab, outab)
+  return(well_cnt)
+}
+```
+
+# New Mexico CCA/A
+
+```{r first_overview, echo=FALSE}
+nm$APR_2 <- as.Date(nm$apr_date, format = "%m/%d/%Y")
+nm$APR_YR <- year(nm$APR_2)
+
+yr_tab <- table(nm$APR_YR) %>% as.data.frame() %>%
+  mutate(year = as.numeric(as.character(Var1))) %>%
+  filter(year > 1900) %>%
+  filter(year < 9999)
+
+# plot(Freq ~ year, data = yr_tab, type = "l")
+# abline(v = 2008, col = "red")
+```
+
+```{r NM_figure, echo=FALSE}
+DSL_range <- filter(nm, DSL_range == 1)
+DSL_range_no <- filter(nm, DSL_range == 0)
+DSL_range_df <- make_df(DSL_range, DSL_range_no)
+DSL_range_post <- make_df(DSL_range, DSL_range_no, min = 2008)
+DSL_range_pre <- make_df(DSL_range, DSL_range_no, max = 2009)
+
+ggplot(data = DSL_range_df, aes(x = year, y = Freq, colour = inside)) +
+  geom_point(alpha = 0.7, size = 4) +
+  geom_line(data = DSL_range_post, 
+            stat="smooth", method = "lm", se = TRUE, alpha = 0.4) +
+  geom_line(data = DSL_range_pre, 
+            stat="smooth", method = "lm", se = TRUE, alpha = 0.4) +
+  scale_y_log10() +
+  scale_x_continuous(breaks = pretty_breaks()) +
+  labs(y = "# approved wells", x = "", color = "In CCA/A area?") +
+  scale_color_viridis(discrete = TRUE) +
+  theme_hc()
+
+```
+
+The sample size post-CCA/A is very small, so the results from the models need to be interpreted with due caution:
+
+```{r NM_analysis}
+DSL_range_df$period <- ifelse(DSL_range_df$year >= 2009, "post", "pre")
+
+mod1 <- glm(Freq ~ year * inside * period, family = poisson(), data = DSL_range_df)
+summary(mod1)
+
+mod2 <- glm(Freq ~ year * inside, family = poisson(), data = DSL_range_post)
+summary(mod2)
+
+mod3 <- glm(Freq ~ year * inside, family = poisson(), data = DSL_range_pre)
+summary(mod3)
+```
+
+
+
+# Texas Conservation Plan (TCP)
+
+```{r tx1, echo = FALSE}
+tx_appr <- filter(tx, approved_d != "")
+table(tx_appr$DSL_habita)
+# 1/6/1983 0:00:00
+tx_appr$APR_2 <- tx_appr$approved_d %>%
+  gsub(pattern = " 0:00:00", replacement = "") %>%
+  as.Date(tx_appr$approved_d, format = "%m/%d/%Y")
+tx_appr$APR_YR <- year(tx_appr$APR_2)
+# hist(tx_appr$APR_YR)
+
+yr_tab <- table(tx_appr$APR_YR) %>% as.data.frame() %>%
+  mutate(year = as.numeric(as.character(Var1))) %>%
+  filter(year > 1900)
+
+# plot(Freq ~ year, data = yr_tab, type = "l")
+# abline(v = 2012, col = "red")
+
+TX_suit <- filter(tx_appr, DSL_habita == 1)
+TX_suit_no <- filter(tx_appr, DSL_habita == 0)
+
+TX_range_df <- make_df(TX_suit, TX_suit_no)
+TX_range_post <- make_df(TX_suit, TX_suit_no, min = 2011)
+TX_range_pre <- make_df(TX_suit, TX_suit_no, max = 2012)
+ggplot(data = TX_range_df, aes(x = year, y = Freq, colour = inside)) +
+  geom_point(alpha = 0.7, size = 4) +
+  geom_line(data = TX_range_post, 
+            stat="smooth", method = "lm", se = TRUE, alpha = 0.4) +
+  geom_line(data = TX_range_pre, 
+            stat="smooth", method = "lm", se = TRUE, alpha = 0.4) +
+  scale_y_log10() +
+  scale_x_continuous(breaks = pretty_breaks()) +
+  labs(y = "# approved wells", x = "", color = "In TCP area?") +
+  scale_color_viridis(discrete = TRUE) +
+  theme_hc()
+```
+
+The post-TCP sample size is even smaller than the NM analysis, but we can check if there's a difference we're not seeing in the graphs:
+
+```{r TX_mod}
+mod4 <- glm(Freq ~ year * inside, family = poisson(), data = TX_range_post)
+summary(mod4)
+
+mod5 <- glm(Freq ~ year * inside, family = poisson(), data = TX_range_pre)
+summary(mod5)
+
+TX_range_df$period <- ifelse(TX_range_df$year >= 2012, "post", "pre")
+
+```
+
