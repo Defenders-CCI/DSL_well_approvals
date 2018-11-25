@@ -9,7 +9,7 @@ editor_options:
 
 # Abstract
 
-In 2018 Defenders of Wildlife and the Center for Biological Diversity petitioned the US Fish and Wildlife Service to list the dunes sagebrush lizard (_Sceloporus arenicolus_) as a threatened or endangered species. The petition included new analyses of the effectiveness of voluntary conservation agreements for the lizard in New Mexico and Texas. This document contains those analyses. We show that the Candidate Conservation Agreement (CCA) and CCA with Assurances (CCAA) in New Mexico, which contain strong avoidance mechanisms, are associated with a steep decline in oil and gas well development in the lizard's range. In contrast, the Texas Conservation Plan (TCP), which does not include avoidance, is not associated with any decline in the rate of oil and gas development in the lizard's range.
+In 2018, Defenders of Wildlife and the Center for Biological Diversity petitioned the US Fish and Wildlife Service to list the dunes sagebrush lizard (_Sceloporus arenicolus_) as a threatened or endangered species. The petition included new analyses of the effectiveness of voluntary conservation agreements for the lizard in New Mexico and Texas. This document contains those analyses. We show that the Candidate Conservation Agreement (CCA) and CCA with Assurances (CCAA) in New Mexico, which contain strong avoidance mechanisms, are associated with a steep decline in oil and gas well development in the lizard's range. In contrast, the Texas Conservation Plan (TCP), which does not include avoidance, is not associated with any decline in the rate of oil and gas development in the lizard's range.
 
 ```{r setup, include=FALSE}
 library(ggthemes)
